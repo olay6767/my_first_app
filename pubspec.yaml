@@ -1,0 +1,60 @@
+name: my_first_app
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  google_fonts: ^6.3.2
+  cupertino_icons: ^1.0.8
+
+  # Firebase
+  firebase_core: ^4.9.0
+  firebase_auth: ^6.5.1
+  cloud_firestore: ^6.4.1
+
+  # AI / TFLite
+  tflite_flutter: ^0.12.1
+  image: ^4.9.1
+
+  # Read CSV/TSV nutrition file
+  csv: ^8.0.0
+
+  # Pick image from camera/gallery
+  image_picker: ^1.2.1
+
+  # Google Maps
+  google_maps_flutter: ^2.14.0
+  geolocator: ^14.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_logo.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/app_logo.png"
+  remove_alpha_ios: true
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/models/
+    - assets/data/
+    - assets/images/app_logo.png
+    - assets/images/app_logo_wide.png
+    - assets/images/foods/
+    - assets/images/restaurants/

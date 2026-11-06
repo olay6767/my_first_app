@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>Seed Foods to Firebase</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f8fbf8; padding: 30px; }
+    button { background: #2e7d32; color: white; border: none; padding: 14px 22px; border-radius: 10px; font-size: 16px; cursor: pointer; }
+    button:hover { background: #256428; }
+    pre { margin-top: 20px; background: white; padding: 16px; border-radius: 12px; border: 1px solid #ddd; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>เพิ่มเมนูอาหารเข้า Firebase</h1>
+  <p>กดปุ่มนี้เพื่อสุ่มเมนูอาหารให้แต่ละร้าน ร้านละ 5 เมนู เข้า subcollection <b>restaurants/{restaurantId}/foods</b></p>
+  <p><b>Type ที่กำหนด:</b> String, Int/Number, Boolean, Array, Map/Object, Timestamp</p>
+  <button id="seedBtn">สุ่มเมนูเข้าร้านและเพิ่มเข้า Firebase</button>
+  <pre id="result">รอเพิ่มข้อมูล...</pre>
+
+  <script type="module">
+    import { db } from "./firebase-config.js";
+    import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    const baseFoods = [
+      {
+            "id": "food012",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "ข้าวกะเพรา",
+            "imageUrl": "assets/images/foods/12.jpg",
+            "portionG": 400,
+            "ingredients": "ข้าวสวย, เนื้อสัตว์, ใบกะเพรา, พริก, กระเทียม, น้ำมัน, น้ำปลา",
+            "calories": 550,
+            "carb": 65,
+            "sugar": 5,
+            "protein": 28,
+            "fat": 22,
+            "saturatedFat": 5,
+            "sodium": 1000,
+            "diabetesRisk": "เสี่ยงสูง",
+            "hypertensionRisk": "เสี่ยงสูง",
+            "dyslipidemiaRisk": "เสี่ยงปานกลาง",
+            "kidneyRisk": "เสี่ยงสูง",
+            "obesityRisk": "เสี่ยงปานกลาง",
+            "risks": {
+                  "diabetes": "เสี่ยงสูง",
+                  "hypertension": "เสี่ยงสูง",
+                  "dyslipidemia": "เสี่ยงปานกลาง",
+                  "kidney": "เสี่ยงสูง",
+                  "obesity": "เสี่ยงปานกลาง"
+            },
+            "riskNote": "คาร์บและโซเดียมค่อนข้างสูง",
+            "recommendation": "ผู้ป่วยเบาหวานควรลดข้าวครึ่งจาน ผู้ป่วยความดันและโรคไตควรสั่งเค็มน้อย ผู้ที่มีไขมันสูงควรลดน้ำมันหรือไม่เพิ่มไข่ดาว",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "carb 65g > 60g = เสี่ยงสูงต่อเบาหวาน, sodium 1000mg > 800mg = เสี่ยงสูงต่อความดันและโรคไต",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [],
+            "cautionForDiseases": [
+                  "เบาหวานชนิดที่ 2",
+                  "ความดันโลหิตสูง",
+                  "ไขมันในเลือดสูง",
+                  "โรคไตเรื้อรัง",
+                  "โรคอ้วน"
+            ],
+            "status": "ไม่แนะนำ"
+      },
+      {
+            "id": "food020",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "ข้าวเหนียวมะม่วง",
+            "imageUrl": "assets/images/foods/20.jpg",
+            "portionG": 250,
+            "ingredients": "ข้าวเหนียว, มะม่วง, กะทิ, น้ำตาล, เกลือ",
+            "calories": 450,
+            "carb": 85,
+            "sugar": 35,
+            "protein": 6,
+            "fat": 12,
+            "saturatedFat": 8,
+            "sodium": 250,
+            "diabetesRisk": "เสี่ยงสูง",
+            "hypertensionRisk": "เสี่ยงต่ำ",
+            "dyslipidemiaRisk": "เสี่ยงสูง",
+            "kidneyRisk": "เสี่ยงปานกลาง",
+            "obesityRisk": "เสี่ยงสูง",
+            "risks": {
+                  "diabetes": "เสี่ยงสูง",
+                  "hypertension": "เสี่ยงต่ำ",
+                  "dyslipidemia": "เสี่ยงสูง",
+                  "kidney": "เสี่ยงปานกลาง",
+                  "obesity": "เสี่ยงสูง"
+            },
+            "riskNote": "น้ำตาล คาร์โบไฮเดรต และไขมันอิ่มตัวสูง",
+            "recommendation": "ผู้ป่วยเบาหวานและโรคอ้วนควรจำกัดปริมาณ ผู้มีไขมันในเลือดสูงควรระวังกะทิ ผู้ป่วยโรคไตควรกินแต่น้อย",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "carb 85g > 60g และ sugar 35g > 20g = เสี่ยงสูงต่อเบาหวาน, saturated fat 8g > 5g = เสี่ยงสูงต่อไขมันในเลือดสูง",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [
+                  "ความดันโลหิตสูง"
+            ],
+            "cautionForDiseases": [
+                  "เบาหวานชนิดที่ 2",
+                  "ไขมันในเลือดสูง",
+                  "โรคไตเรื้อรัง",
+                  "โรคอ้วน"
+            ],
+            "status": "ไม่แนะนำ"
+      },
+      {
+            "id": "food037",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "สุกี้แห้ง",
+            "imageUrl": "assets/images/foods/37.jpg",
+            "portionG": 350,
+            "ingredients": "วุ้นเส้น, ไข่, ผัก, เนื้อสัตว์, น้ำจิ้มสุกี้",
+            "calories": 420,
+            "carb": 45,
+            "sugar": 8,
+            "protein": 25,
+            "fat": 15,
+            "saturatedFat": 3,
+            "sodium": 900,
+            "diabetesRisk": "เสี่ยงปานกลาง",
+            "hypertensionRisk": "เสี่ยงสูง",
+            "dyslipidemiaRisk": "เสี่ยงปานกลาง",
+            "kidneyRisk": "เสี่ยงสูง",
+            "obesityRisk": "เสี่ยงปานกลาง",
+            "risks": {
+                  "diabetes": "เสี่ยงปานกลาง",
+                  "hypertension": "เสี่ยงสูง",
+                  "dyslipidemia": "เสี่ยงปานกลาง",
+                  "kidney": "เสี่ยงสูง",
+                  "obesity": "เสี่ยงปานกลาง"
+            },
+            "riskNote": "ควรระวังโซเดียมจากน้ำจิ้ม และคาร์บจากวุ้นเส้น",
+            "recommendation": "ผู้ป่วยความดันและโรคไตควรลดน้ำจิ้ม ผู้ป่วยเบาหวานควรควบคุมปริมาณวุ้นเส้น",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "carb 45g = เสี่ยงปานกลางต่อเบาหวาน, sodium 900mg > 800mg = เสี่ยงสูงต่อความดันและโรคไต",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [],
+            "cautionForDiseases": [
+                  "เบาหวานชนิดที่ 2",
+                  "ความดันโลหิตสูง",
+                  "ไขมันในเลือดสูง",
+                  "โรคไตเรื้อรัง",
+                  "โรคอ้วน"
+            ],
+            "status": "ไม่แนะนำ"
+      },
+      {
+            "id": "food043",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "ก๋วยเตี๋ยวคั่วไก่",
+            "imageUrl": "assets/images/foods/43.jpg",
+            "portionG": 400,
+            "ingredients": "เส้นใหญ่, ไก่, ไข่, น้ำมัน, ซีอิ๊ว, ผัก",
+            "calories": 600,
+            "carb": 70,
+            "sugar": 6,
+            "protein": 25,
+            "fat": 25,
+            "saturatedFat": 5,
+            "sodium": 1000,
+            "diabetesRisk": "เสี่ยงสูง",
+            "hypertensionRisk": "เสี่ยงสูง",
+            "dyslipidemiaRisk": "เสี่ยงปานกลาง",
+            "kidneyRisk": "เสี่ยงสูง",
+            "obesityRisk": "เสี่ยงปานกลาง",
+            "risks": {
+                  "diabetes": "เสี่ยงสูง",
+                  "hypertension": "เสี่ยงสูง",
+                  "dyslipidemia": "เสี่ยงปานกลาง",
+                  "kidney": "เสี่ยงสูง",
+                  "obesity": "เสี่ยงปานกลาง"
+            },
+            "riskNote": "คาร์บ โซเดียม และไขมันค่อนข้างสูง",
+            "recommendation": "ผู้ป่วยเบาหวานควรลดเส้น ผู้ป่วยความดันและโรคไตควรลดซอส/ซีอิ๊ว ผู้ที่ควบคุมน้ำหนักควรกินปริมาณน้อย",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "carb 70g > 60g = เสี่ยงสูงต่อเบาหวาน, sodium 1000mg > 800mg = เสี่ยงสูงต่อความดันและโรคไต, fat 25g = เสี่ยงปานกลางต่อไขมันและโรคอ้วน",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [],
+            "cautionForDiseases": [
+                  "เบาหวานชนิดที่ 2",
+                  "ความดันโลหิตสูง",
+                  "ไขมันในเลือดสูง",
+                  "โรคไตเรื้อรัง",
+                  "โรคอ้วน"
+            ],
+            "status": "ไม่แนะนำ"
+      },
+      {
+            "id": "food046",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "ข้าวหมกไก่",
+            "imageUrl": "assets/images/foods/46.jpg",
+            "portionG": 450,
+            "ingredients": "ข้าว, ไก่, เครื่องเทศ, น้ำมัน, หอมเจียว, น้ำจิ้ม",
+            "calories": 650,
+            "carb": 80,
+            "sugar": 5,
+            "protein": 30,
+            "fat": 22,
+            "saturatedFat": 6,
+            "sodium": 950,
+            "diabetesRisk": "เสี่ยงสูง",
+            "hypertensionRisk": "เสี่ยงสูง",
+            "dyslipidemiaRisk": "เสี่ยงสูง",
+            "kidneyRisk": "เสี่ยงสูง",
+            "obesityRisk": "เสี่ยงสูง",
+            "risks": {
+                  "diabetes": "เสี่ยงสูง",
+                  "hypertension": "เสี่ยงสูง",
+                  "dyslipidemia": "เสี่ยงสูง",
+                  "kidney": "เสี่ยงสูง",
+                  "obesity": "เสี่ยงสูง"
+            },
+            "riskNote": "พลังงาน คาร์บ โซเดียม และไขมันอิ่มตัวค่อนข้างสูง",
+            "recommendation": "ผู้ป่วยเบาหวานควรลดข้าว ผู้ป่วยความดันและโรคไตควรลดน้ำจิ้ม ผู้ที่มีไขมันสูงควรเลี่ยงหอมเจียวและหนังไก่",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "kcal 650 > 600g = เสี่ยงสูงต่อโรคอ้วน, carb 80g > 60g = เสี่ยงสูงต่อเบาหวาน, sodium 950mg > 800mg = เสี่ยงสูงต่อความดันและโรคไต, saturated fat 6g > 5g = เสี่ยงสูงต่อไขมันในเลือดสูง",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [],
+            "cautionForDiseases": [
+                  "เบาหวานชนิดที่ 2",
+                  "ความดันโลหิตสูง",
+                  "ไขมันในเลือดสูง",
+                  "โรคไตเรื้อรัง",
+                  "โรคอ้วน"
+            ],
+            "status": "ไม่แนะนำ"
+      },
+      {
+            "id": "food050",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "หอยทอด",
+            "imageUrl": "assets/images/foods/50.jpg",
+            "portionG": 350,
+            "ingredients": "แป้ง, หอย, ไข่, น้ำมัน, ถั่วงอก, น้ำจิ้ม",
+            "calories": 650,
+            "carb": 60,
+            "sugar": 8,
+            "protein": 20,
+            "fat": 35,
+            "saturatedFat": 8,
+            "sodium": 1000,
+            "diabetesRisk": "เสี่ยงปานกลาง",
+            "hypertensionRisk": "เสี่ยงสูง",
+            "dyslipidemiaRisk": "เสี่ยงสูง",
+            "kidneyRisk": "เสี่ยงสูง",
+            "obesityRisk": "เสี่ยงสูง",
+            "risks": {
+                  "diabetes": "เสี่ยงปานกลาง",
+                  "hypertension": "เสี่ยงสูง",
+                  "dyslipidemia": "เสี่ยงสูง",
+                  "kidney": "เสี่ยงสูง",
+                  "obesity": "เสี่ยงสูง"
+            },
+            "riskNote": "เป็นอาหารทอด ไขมันสูง โซเดียมสูง และพลังงานสูง",
+            "recommendation": "ผู้ป่วยไขมันในเลือดสูง โรคอ้วน ความดัน และโรคไตควรจำกัดปริมาณหรือหลีกเลี่ยงการกินบ่อย",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "kcal 650 > 600 = เสี่ยงสูงต่อโรคอ้วน, fat 35g > 25g และ saturated fat 8g > 5g = เสี่ยงสูงต่อไขมันในเลือดสูง, sodium 1000mg > 800mg = เสี่ยงสูงต่อความดันและโรคไต",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [],
+            "cautionForDiseases": [
+                  "เบาหวานชนิดที่ 2",
+                  "ความดันโลหิตสูง",
+                  "ไขมันในเลือดสูง",
+                  "โรคไตเรื้อรัง",
+                  "โรคอ้วน"
+            ],
+            "status": "ไม่แนะนำ"
+      },
+      {
+            "id": "food053",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "หอยลาย",
+            "imageUrl": "assets/images/foods/53.jpg",
+            "portionG": 250,
+            "ingredients": "หอยลาย, น้ำพริกเผา, กระเทียม, พริก, น้ำมัน, ซอสปรุงรส",
+            "calories": 300,
+            "carb": 15,
+            "sugar": 5,
+            "protein": 25,
+            "fat": 12,
+            "saturatedFat": 3,
+            "sodium": 1200,
+            "diabetesRisk": "เสี่ยงต่ำ",
+            "hypertensionRisk": "เสี่ยงสูง",
+            "dyslipidemiaRisk": "เสี่ยงต่ำ",
+            "kidneyRisk": "เสี่ยงสูง",
+            "obesityRisk": "เสี่ยงต่ำ",
+            "risks": {
+                  "diabetes": "เสี่ยงต่ำ",
+                  "hypertension": "เสี่ยงสูง",
+                  "dyslipidemia": "เสี่ยงต่ำ",
+                  "kidney": "เสี่ยงสูง",
+                  "obesity": "เสี่ยงต่ำ"
+            },
+            "riskNote": "โซเดียมสูงจากซอสและน้ำพริกเผา",
+            "recommendation": "ผู้ป่วยความดันและโรคไตควรระวังโซเดียม ควรสั่งรสอ่อนหรือกินแต่น้อย",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "sodium 1200mg > 800mg = เสี่ยงสูงต่อความดันและโรคไต, carb และ kcal ต่ำ = เสี่ยงต่ำต่อเบาหวานและโรคอ้วน",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [
+                  "เบาหวานชนิดที่ 2",
+                  "ไขมันในเลือดสูง",
+                  "โรคอ้วน"
+            ],
+            "cautionForDiseases": [
+                  "ความดันโลหิตสูง",
+                  "โรคไตเรื้อรัง"
+            ],
+            "status": "ควรระวัง"
+      },
+      {
+            "id": "food056",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "แกงคั่วหอย",
+            "imageUrl": "assets/images/foods/56.jpg",
+            "portionG": 300,
+            "ingredients": "หอย, กะทิ, พริกแกง, น้ำปลา, ใบชะพลู, น้ำตาล",
+            "calories": 450,
+            "carb": 20,
+            "sugar": 8,
+            "protein": 25,
+            "fat": 30,
+            "saturatedFat": 15,
+            "sodium": 1000,
+            "diabetesRisk": "เสี่ยงต่ำ",
+            "hypertensionRisk": "เสี่ยงสูง",
+            "dyslipidemiaRisk": "เสี่ยงสูง",
+            "kidneyRisk": "เสี่ยงสูง",
+            "obesityRisk": "เสี่ยงสูง",
+            "risks": {
+                  "diabetes": "เสี่ยงต่ำ",
+                  "hypertension": "เสี่ยงสูง",
+                  "dyslipidemia": "เสี่ยงสูง",
+                  "kidney": "เสี่ยงสูง",
+                  "obesity": "เสี่ยงสูง"
+            },
+            "riskNote": "กะทิทำให้ไขมันและไขมันอิ่มตัวสูง และมีโซเดียมจากเครื่องแกง",
+            "recommendation": "ผู้มีไขมันในเลือดสูงและโรคอ้วนควรจำกัดกะทิ ผู้ป่วยความดันและโรคไตควรระวังโซเดียม",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "fat 30g > 25g และ saturated fat 15g > 5g = เสี่ยงสูงต่อไขมันในเลือดสูงและโรคอ้วน, sodium 1000mg > 800mg = เสี่ยงสูงต่อความดันและโรคไต",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [
+                  "เบาหวานชนิดที่ 2"
+            ],
+            "cautionForDiseases": [
+                  "ความดันโลหิตสูง",
+                  "ไขมันในเลือดสูง",
+                  "โรคไตเรื้อรัง",
+                  "โรคอ้วน"
+            ],
+            "status": "ไม่แนะนำ"
+      },
+      {
+            "id": "food059",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "พะโล้",
+            "imageUrl": "assets/images/foods/59.jpg",
+            "portionG": 350,
+            "ingredients": "ไข่, หมู, เต้าหู้, เครื่องพะโล้, ซีอิ๊ว, น้ำตาล",
+            "calories": 450,
+            "carb": 25,
+            "sugar": 12,
+            "protein": 30,
+            "fat": 25,
+            "saturatedFat": 7,
+            "sodium": 1200,
+            "diabetesRisk": "เสี่ยงปานกลาง",
+            "hypertensionRisk": "เสี่ยงสูง",
+            "dyslipidemiaRisk": "เสี่ยงสูง",
+            "kidneyRisk": "เสี่ยงสูง",
+            "obesityRisk": "เสี่ยงปานกลาง",
+            "risks": {
+                  "diabetes": "เสี่ยงปานกลาง",
+                  "hypertension": "เสี่ยงสูง",
+                  "dyslipidemia": "เสี่ยงสูง",
+                  "kidney": "เสี่ยงสูง",
+                  "obesity": "เสี่ยงปานกลาง"
+            },
+            "riskNote": "โซเดียมสูง น้ำตาลปานกลาง และไขมันอิ่มตัวค่อนข้างสูง",
+            "recommendation": "ผู้ป่วยความดันและโรคไตควรลดน้ำพะโล้ ผู้มีไขมันสูงควรเลือกเนื้อไม่ติดมันและจำกัดไข่/หมูติดมัน",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "sugar 12g = เสี่ยงปานกลางต่อเบาหวาน, sodium 1200mg > 800mg = เสี่ยงสูงต่อความดันและโรคไต, saturated fat 7g > 5g = เสี่ยงสูงต่อไขมันในเลือดสูง",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [],
+            "cautionForDiseases": [
+                  "เบาหวานชนิดที่ 2",
+                  "ความดันโลหิตสูง",
+                  "ไขมันในเลือดสูง",
+                  "โรคไตเรื้อรัง",
+                  "โรคอ้วน"
+            ],
+            "status": "ไม่แนะนำ"
+      },
+      {
+            "id": "food066",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "โรตี",
+            "imageUrl": "assets/images/foods/66.jpg",
+            "portionG": 180,
+            "ingredients": "แป้งโรตี, น้ำมันหรือเนย, นมข้นหวาน, น้ำตาล",
+            "calories": 500,
+            "carb": 70,
+            "sugar": 25,
+            "protein": 8,
+            "fat": 20,
+            "saturatedFat": 10,
+            "sodium": 300,
+            "diabetesRisk": "เสี่ยงสูง",
+            "hypertensionRisk": "เสี่ยงต่ำ",
+            "dyslipidemiaRisk": "เสี่ยงสูง",
+            "kidneyRisk": "เสี่ยงปานกลาง",
+            "obesityRisk": "เสี่ยงสูง",
+            "risks": {
+                  "diabetes": "เสี่ยงสูง",
+                  "hypertension": "เสี่ยงต่ำ",
+                  "dyslipidemia": "เสี่ยงสูง",
+                  "kidney": "เสี่ยงปานกลาง",
+                  "obesity": "เสี่ยงสูง"
+            },
+            "riskNote": "แป้ง น้ำตาล และไขมันอิ่มตัวสูง",
+            "recommendation": "ผู้ป่วยเบาหวานและโรคอ้วนควรหลีกเลี่ยงหรือกินน้อยมาก ผู้มีไขมันสูงควรระวังเนย/นมข้นหวาน",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "carb 70g > 60g และ sugar 25g > 20g = เสี่ยงสูงต่อเบาหวานและโรคอ้วน, saturated fat 10g > 5g = เสี่ยงสูงต่อไขมันในเลือดสูง",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [
+                  "ความดันโลหิตสูง"
+            ],
+            "cautionForDiseases": [
+                  "เบาหวานชนิดที่ 2",
+                  "ไขมันในเลือดสูง",
+                  "โรคไตเรื้อรัง",
+                  "โรคอ้วน"
+            ],
+            "status": "ไม่แนะนำ"
+      },
+      {
+            "id": "food069",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "แกงส้ม",
+            "imageUrl": "assets/images/foods/69.jpg",
+            "portionG": 300,
+            "ingredients": "ผัก, ปลา/กุ้ง, พริกแกง, น้ำปลา, น้ำมะขาม, น้ำตาล",
+            "calories": 250,
+            "carb": 20,
+            "sugar": 10,
+            "protein": 20,
+            "fat": 5,
+            "saturatedFat": 1,
+            "sodium": 1000,
+            "diabetesRisk": "เสี่ยงปานกลาง",
+            "hypertensionRisk": "เสี่ยงสูง",
+            "dyslipidemiaRisk": "เสี่ยงต่ำ",
+            "kidneyRisk": "เสี่ยงสูง",
+            "obesityRisk": "เสี่ยงต่ำ",
+            "risks": {
+                  "diabetes": "เสี่ยงปานกลาง",
+                  "hypertension": "เสี่ยงสูง",
+                  "dyslipidemia": "เสี่ยงต่ำ",
+                  "kidney": "เสี่ยงสูง",
+                  "obesity": "เสี่ยงต่ำ"
+            },
+            "riskNote": "พลังงานไม่สูงมาก แต่โซเดียมสูงจากน้ำปลา/พริกแกง",
+            "recommendation": "ผู้ป่วยความดันและโรคไตควรลดน้ำแกงหรือปรุงรสอ่อน ผู้ป่วยเบาหวานควรระวังน้ำตาลที่เติม",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "sugar 10g = เสี่ยงปานกลางต่อเบาหวาน, sodium 1000mg > 800mg = เสี่ยงสูงต่อความดันและโรคไต, kcal ต่ำ = เสี่ยงต่ำต่อโรคอ้วน",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [
+                  "ไขมันในเลือดสูง",
+                  "โรคอ้วน"
+            ],
+            "cautionForDiseases": [
+                  "เบาหวานชนิดที่ 2",
+                  "ความดันโลหิตสูง",
+                  "โรคไตเรื้อรัง"
+            ],
+            "status": "ไม่แนะนำ"
+      },
+      {
+            "id": "food075",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "หมูกรอบ",
+            "imageUrl": "assets/images/foods/75.jpg",
+            "portionG": 200,
+            "ingredients": "หมูสามชั้น, หนังหมู, น้ำมัน, เกลือ, เครื่องปรุง",
+            "calories": 700,
+            "carb": 5,
+            "sugar": 0,
+            "protein": 25,
+            "fat": 60,
+            "saturatedFat": 20,
+            "sodium": 900,
+            "diabetesRisk": "เสี่ยงต่ำ",
+            "hypertensionRisk": "เสี่ยงสูง",
+            "dyslipidemiaRisk": "เสี่ยงสูง",
+            "kidneyRisk": "เสี่ยงสูง",
+            "obesityRisk": "เสี่ยงสูง",
+            "risks": {
+                  "diabetes": "เสี่ยงต่ำ",
+                  "hypertension": "เสี่ยงสูง",
+                  "dyslipidemia": "เสี่ยงสูง",
+                  "kidney": "เสี่ยงสูง",
+                  "obesity": "เสี่ยงสูง"
+            },
+            "riskNote": "ไขมัน ไขมันอิ่มตัว พลังงาน และโซเดียมสูง",
+            "recommendation": "ผู้มีไขมันในเลือดสูง โรคอ้วน ความดัน และโรคไตควรหลีกเลี่ยงหรือกินแต่น้อยมาก",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "kcal 700 > 600 = เสี่ยงสูงต่อโรคอ้วน, fat 60g > 25g และ saturated fat 20g > 5g = เสี่ยงสูงต่อไขมันในเลือดสูง, sodium 900mg > 800mg = เสี่ยงสูงต่อความดันและโรคไต",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [
+                  "เบาหวานชนิดที่ 2"
+            ],
+            "cautionForDiseases": [
+                  "ความดันโลหิตสูง",
+                  "ไขมันในเลือดสูง",
+                  "โรคไตเรื้อรัง",
+                  "โรคอ้วน"
+            ],
+            "status": "ไม่แนะนำ"
+      },
+      {
+            "id": "food083",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "ผัดไทย",
+            "imageUrl": "assets/images/foods/83.jpg",
+            "portionG": 350,
+            "ingredients": "เส้นจันท์, ไข่, กุ้ง/ไก่, ถั่วงอก, น้ำมัน, น้ำปลา, น้ำตาล, ถั่วลิสง",
+            "calories": 600,
+            "carb": 80,
+            "sugar": 18,
+            "protein": 20,
+            "fat": 20,
+            "saturatedFat": 4,
+            "sodium": 900,
+            "diabetesRisk": "เสี่ยงสูง",
+            "hypertensionRisk": "เสี่ยงสูง",
+            "dyslipidemiaRisk": "เสี่ยงปานกลาง",
+            "kidneyRisk": "เสี่ยงสูง",
+            "obesityRisk": "เสี่ยงปานกลาง",
+            "risks": {
+                  "diabetes": "เสี่ยงสูง",
+                  "hypertension": "เสี่ยงสูง",
+                  "dyslipidemia": "เสี่ยงปานกลาง",
+                  "kidney": "เสี่ยงสูง",
+                  "obesity": "เสี่ยงปานกลาง"
+            },
+            "riskNote": "คาร์บ น้ำตาล และโซเดียมค่อนข้างสูง",
+            "recommendation": "ผู้ป่วยเบาหวานควรลดเส้นและลดน้ำตาล ผู้ป่วยความดัน/โรคไตควรสั่งรสอ่อน ไม่เติมน้ำปลาเพิ่ม",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "carb 80g > 60g = เสี่ยงสูงต่อเบาหวาน, sugar 18g = เสี่ยงปานกลางต่อเบาหวานและโรคอ้วน, sodium 900mg > 800mg = เสี่ยงสูงต่อความดันและโรคไต",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [],
+            "cautionForDiseases": [
+                  "เบาหวานชนิดที่ 2",
+                  "ความดันโลหิตสูง",
+                  "ไขมันในเลือดสูง",
+                  "โรคไตเรื้อรัง",
+                  "โรคอ้วน"
+            ],
+            "status": "ไม่แนะนำ"
+      },
+      {
+            "id": "food088",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "ลาบ",
+            "imageUrl": "assets/images/foods/88.jpg",
+            "portionG": 250,
+            "ingredients": "หมู/ไก่, ข้าวคั่ว, น้ำปลา, มะนาว, พริก, หอมแดง, สมุนไพร",
+            "calories": 350,
+            "carb": 15,
+            "sugar": 3,
+            "protein": 30,
+            "fat": 20,
+            "saturatedFat": 6,
+            "sodium": 1200,
+            "diabetesRisk": "เสี่ยงต่ำ",
+            "hypertensionRisk": "เสี่ยงสูง",
+            "dyslipidemiaRisk": "เสี่ยงสูง",
+            "kidneyRisk": "เสี่ยงสูง",
+            "obesityRisk": "เสี่ยงปานกลาง",
+            "risks": {
+                  "diabetes": "เสี่ยงต่ำ",
+                  "hypertension": "เสี่ยงสูง",
+                  "dyslipidemia": "เสี่ยงสูง",
+                  "kidney": "เสี่ยงสูง",
+                  "obesity": "เสี่ยงปานกลาง"
+            },
+            "riskNote": "โซเดียมสูงและโปรตีนค่อนข้างสูง",
+            "recommendation": "ผู้ป่วยความดันและโรคไตควรลดน้ำปลา ผู้ป่วยโรคไตควรระวังปริมาณโปรตีนตามคำแนะนำแพทย์",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "sodium 1200mg > 800mg = เสี่ยงสูงต่อความดันและโรคไต, protein 30g = เสี่ยงปานกลางถึงสูงต่อโรคไต, saturated fat 6g > 5g = เสี่ยงสูงต่อไขมันในเลือดสูง",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [
+                  "เบาหวานชนิดที่ 2"
+            ],
+            "cautionForDiseases": [
+                  "ความดันโลหิตสูง",
+                  "ไขมันในเลือดสูง",
+                  "โรคไตเรื้อรัง",
+                  "โรคอ้วน"
+            ],
+            "status": "ไม่แนะนำ"
+      },
+      {
+            "id": "food092",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "ทอดมันปลา",
+            "imageUrl": "assets/images/foods/92.jpg",
+            "portionG": 200,
+            "ingredients": "เนื้อปลา, พริกแกง, ไข่, น้ำมัน, ถั่วฝักยาว, น้ำจิ้ม",
+            "calories": 450,
+            "carb": 25,
+            "sugar": 5,
+            "protein": 20,
+            "fat": 25,
+            "saturatedFat": 6,
+            "sodium": 1100,
+            "diabetesRisk": "เสี่ยงต่ำ",
+            "hypertensionRisk": "เสี่ยงสูง",
+            "dyslipidemiaRisk": "เสี่ยงสูง",
+            "kidneyRisk": "เสี่ยงสูง",
+            "obesityRisk": "เสี่ยงปานกลาง",
+            "risks": {
+                  "diabetes": "เสี่ยงต่ำ",
+                  "hypertension": "เสี่ยงสูง",
+                  "dyslipidemia": "เสี่ยงสูง",
+                  "kidney": "เสี่ยงสูง",
+                  "obesity": "เสี่ยงปานกลาง"
+            },
+            "riskNote": "เป็นของทอด มีโซเดียมและไขมันอิ่มตัวค่อนข้างสูง",
+            "recommendation": "ผู้มีไขมันสูงควรจำกัดของทอด ผู้ป่วยความดันและโรคไตควรระวังโซเดียมจากพริกแกงและน้ำจิ้ม",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "sodium 1100mg > 800mg = เสี่ยงสูงต่อความดันและโรคไต, saturated fat 6g > 5g = เสี่ยงสูงต่อไขมันในเลือดสูง, fat 25g = เสี่ยงปานกลางต่อโรคอ้วน",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [
+                  "เบาหวานชนิดที่ 2"
+            ],
+            "cautionForDiseases": [
+                  "ความดันโลหิตสูง",
+                  "ไขมันในเลือดสูง",
+                  "โรคไตเรื้อรัง",
+                  "โรคอ้วน"
+            ],
+            "status": "ไม่แนะนำ"
+      },
+      {
+            "id": "food094",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "หมูย่าง",
+            "imageUrl": "assets/images/foods/94.jpg",
+            "portionG": 250,
+            "ingredients": "หมู, ซอสหมัก, น้ำปลา/ซีอิ๊ว, น้ำตาล, น้ำจิ้ม",
+            "calories": 400,
+            "carb": 5,
+            "sugar": 3,
+            "protein": 35,
+            "fat": 25,
+            "saturatedFat": 8,
+            "sodium": 900,
+            "diabetesRisk": "เสี่ยงต่ำ",
+            "hypertensionRisk": "เสี่ยงสูง",
+            "dyslipidemiaRisk": "เสี่ยงสูง",
+            "kidneyRisk": "เสี่ยงสูง",
+            "obesityRisk": "เสี่ยงปานกลาง",
+            "risks": {
+                  "diabetes": "เสี่ยงต่ำ",
+                  "hypertension": "เสี่ยงสูง",
+                  "dyslipidemia": "เสี่ยงสูง",
+                  "kidney": "เสี่ยงสูง",
+                  "obesity": "เสี่ยงปานกลาง"
+            },
+            "riskNote": "โปรตีน ไขมันอิ่มตัว และโซเดียมค่อนข้างสูง",
+            "recommendation": "ผู้ป่วยโรคไตควรระวังโปรตีน ผู้ป่วยความดันควรลดน้ำจิ้ม ผู้มีไขมันสูงควรเลือกเนื้อไม่ติดมัน",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "protein 35g > 30g = เสี่ยงสูงต่อโรคไต, sodium 900mg > 800mg = เสี่ยงสูงต่อความดันและโรคไต, saturated fat 8g > 5g = เสี่ยงสูงต่อไขมันในเลือดสูง",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [
+                  "เบาหวานชนิดที่ 2"
+            ],
+            "cautionForDiseases": [
+                  "ความดันโลหิตสูง",
+                  "ไขมันในเลือดสูง",
+                  "โรคไตเรื้อรัง",
+                  "โรคอ้วน"
+            ],
+            "status": "ไม่แนะนำ"
+      },
+      {
+            "id": "food095",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "ส้มตำ",
+            "imageUrl": "assets/images/foods/95.jpg",
+            "portionG": 250,
+            "ingredients": "มะละกอ, มะเขือเทศ, ถั่วฝักยาว, พริก, มะนาว, น้ำปลา/ปลาร้า, น้ำตาล",
+            "calories": 180,
+            "carb": 30,
+            "sugar": 15,
+            "protein": 5,
+            "fat": 2,
+            "saturatedFat": 0,
+            "sodium": 1200,
+            "diabetesRisk": "เสี่ยงปานกลาง",
+            "hypertensionRisk": "เสี่ยงสูง",
+            "dyslipidemiaRisk": "เสี่ยงต่ำ",
+            "kidneyRisk": "เสี่ยงสูง",
+            "obesityRisk": "เสี่ยงต่ำ",
+            "risks": {
+                  "diabetes": "เสี่ยงปานกลาง",
+                  "hypertension": "เสี่ยงสูง",
+                  "dyslipidemia": "เสี่ยงต่ำ",
+                  "kidney": "เสี่ยงสูง",
+                  "obesity": "เสี่ยงต่ำ"
+            },
+            "riskNote": "โซเดียมสูงและมีน้ำตาลจากการปรุงรส",
+            "recommendation": "ผู้ป่วยความดันและโรคไตควรสั่งเค็มน้อย/ไม่ใส่ปลาร้า ผู้ป่วยเบาหวานควรสั่งหวานน้อย",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "sugar 15g = เสี่ยงปานกลางต่อเบาหวาน, sodium 1200mg > 800mg = เสี่ยงสูงต่อความดันและโรคไต, kcal ต่ำ = เสี่ยงต่ำต่อโรคอ้วน",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [
+                  "ไขมันในเลือดสูง",
+                  "โรคอ้วน"
+            ],
+            "cautionForDiseases": [
+                  "เบาหวานชนิดที่ 2",
+                  "ความดันโลหิตสูง",
+                  "โรคไตเรื้อรัง"
+            ],
+            "status": "ไม่แนะนำ"
+      },
+      {
+            "id": "food097",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "ข้าวผัด",
+            "imageUrl": "assets/images/foods/97.jpg",
+            "portionG": 400,
+            "ingredients": "ข้าวสวย, ไข่, เนื้อสัตว์, น้ำมัน, ซีอิ๊ว/น้ำปลา, ผัก",
+            "calories": 600,
+            "carb": 80,
+            "sugar": 4,
+            "protein": 20,
+            "fat": 20,
+            "saturatedFat": 5,
+            "sodium": 900,
+            "diabetesRisk": "เสี่ยงสูง",
+            "hypertensionRisk": "เสี่ยงสูง",
+            "dyslipidemiaRisk": "เสี่ยงปานกลาง",
+            "kidneyRisk": "เสี่ยงสูง",
+            "obesityRisk": "เสี่ยงปานกลาง",
+            "risks": {
+                  "diabetes": "เสี่ยงสูง",
+                  "hypertension": "เสี่ยงสูง",
+                  "dyslipidemia": "เสี่ยงปานกลาง",
+                  "kidney": "เสี่ยงสูง",
+                  "obesity": "เสี่ยงปานกลาง"
+            },
+            "riskNote": "คาร์บและโซเดียมสูง ไขมันปานกลาง",
+            "recommendation": "ผู้ป่วยเบาหวานควรลดข้าว ผู้ป่วยความดัน/โรคไตควรสั่งเค็มน้อย ผู้ควบคุมน้ำหนักควรลดปริมาณ",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "carb 80g > 60g = เสี่ยงสูงต่อเบาหวาน, sodium 900mg > 800mg = เสี่ยงสูงต่อความดันและโรคไต, kcal 600 = เสี่ยงปานกลางต่อโรคอ้วน",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [],
+            "cautionForDiseases": [
+                  "เบาหวานชนิดที่ 2",
+                  "ความดันโลหิตสูง",
+                  "ไขมันในเลือดสูง",
+                  "โรคไตเรื้อรัง",
+                  "โรคอ้วน"
+            ],
+            "status": "ไม่แนะนำ"
+      },
+      {
+            "id": "food098",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "ต้มยำ",
+            "imageUrl": "assets/images/foods/98.jpg",
+            "portionG": 300,
+            "ingredients": "กุ้ง/ไก่, เห็ด, ตะไคร้, ข่า, ใบมะกรูด, น้ำปลา, พริก, มะนาว",
+            "calories": 250,
+            "carb": 15,
+            "sugar": 5,
+            "protein": 25,
+            "fat": 8,
+            "saturatedFat": 2,
+            "sodium": 1200,
+            "diabetesRisk": "เสี่ยงต่ำ",
+            "hypertensionRisk": "เสี่ยงสูง",
+            "dyslipidemiaRisk": "เสี่ยงต่ำ",
+            "kidneyRisk": "เสี่ยงสูง",
+            "obesityRisk": "เสี่ยงต่ำ",
+            "risks": {
+                  "diabetes": "เสี่ยงต่ำ",
+                  "hypertension": "เสี่ยงสูง",
+                  "dyslipidemia": "เสี่ยงต่ำ",
+                  "kidney": "เสี่ยงสูง",
+                  "obesity": "เสี่ยงต่ำ"
+            },
+            "riskNote": "โซเดียมสูงจากน้ำปลา/เครื่องปรุง โดยเฉพาะถ้าซดน้ำซุปมาก",
+            "recommendation": "ผู้ป่วยความดันและโรคไตควรลดการซดน้ำซุปหรือสั่งรสอ่อน",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "sodium 1200mg > 800mg = เสี่ยงสูงต่อความดันและโรคไต, kcal/carb/fat ต่ำ = เสี่ยงต่ำต่อเบาหวาน ไขมันสูง และโรคอ้วน",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [
+                  "เบาหวานชนิดที่ 2",
+                  "ไขมันในเลือดสูง",
+                  "โรคอ้วน"
+            ],
+            "cautionForDiseases": [
+                  "ความดันโลหิตสูง",
+                  "โรคไตเรื้อรัง"
+            ],
+            "status": "ควรระวัง"
+      },
+      {
+            "id": "food099",
+            "restaurantId": "restaurant001",
+            "restaurantName": "ร้านครัวลุงหิน",
+            "name": "ปลาทอด",
+            "imageUrl": "assets/images/foods/99.jpg",
+            "portionG": 300,
+            "ingredients": "ปลา, แป้งเล็กน้อย, น้ำมัน, เกลือ, น้ำจิ้ม",
+            "calories": 500,
+            "carb": 10,
+            "sugar": 0,
+            "protein": 35,
+            "fat": 30,
+            "saturatedFat": 7,
+            "sodium": 850,
+            "diabetesRisk": "เสี่ยงต่ำ",
+            "hypertensionRisk": "เสี่ยงสูง",
+            "dyslipidemiaRisk": "เสี่ยงสูง",
+            "kidneyRisk": "เสี่ยงสูง",
+            "obesityRisk": "เสี่ยงสูง",
+            "risks": {
+                  "diabetes": "เสี่ยงต่ำ",
+                  "hypertension": "เสี่ยงสูง",
+                  "dyslipidemia": "เสี่ยงสูง",
+                  "kidney": "เสี่ยงสูง",
+                  "obesity": "เสี่ยงสูง"
+            },
+            "riskNote": "โปรตีนสูง ไขมันสูงจากการทอด และโซเดียมค่อนข้างสูง",
+            "recommendation": "ผู้มีไขมันสูงและโรคอ้วนควรเลือกปลานึ่ง/ย่างแทน ผู้ป่วยโรคไตควรระวังโปรตีนและโซเดียม",
+            "nutritionSource": "Thai Food Composition Database / กรมอนามัย / estimate",
+            "riskCriteria": "protein 35g > 30g = เสี่ยงสูงต่อโรคไต, fat 30g > 25g = เสี่ยงสูงต่อไขมันในเลือดสูงและโรคอ้วน, sodium 850mg > 800mg = เสี่ยงสูงต่อความดันและโรคไต",
+            "medicalDisclaimer": "ผลวิเคราะห์นี้เป็นการประเมินเบื้องต้นจากข้อมูลโภชนาการโดยประมาณ ไม่ใช่คำวินิจฉัยทางการแพทย์ ผู้ป่วยควรปรึกษาแพทย์หรือนักโภชนาการ",
+            "suitableForDiseases": [
+                  "เบาหวานชนิดที่ 2"
+            ],
+            "cautionForDiseases": [
+                  "ความดันโลหิตสูง",
+                  "ไขมันในเลือดสูง",
+                  "โรคไตเรื้อรัง",
+                  "โรคอ้วน"
+            ],
+            "status": "ไม่แนะนำ"
+      }
+];
+
+    const restaurants = [
+      { id: "restaurant002", name: "ครัวนกน้อย อาหารตามสั่ง มทส." },
+      { id: "restaurant003", name: "ครัวรสชื่นชม" },
+      { id: "restaurant004", name: "ครัวนายเพรช" },
+      { id: "restaurant005", name: "ร้านครัว Magic food (เจ้แนน)" },
+      { id: "restaurant006", name: "ครัวบ้านเป็ด" },
+      { id: "restaurant008", name: "ร้านอาหารแวะถัวะ" },
+      { id: "restaurant009", name: "ร้านเต้นจั้ง" },
+      { id: "restaurant010", name: "ร้านกินเก่ง" }
+    ];
+
+    function shuffleArray(array) {
+      const copiedArray = [...array];
+
+      for (let i = copiedArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copiedArray[i], copiedArray[j]] = [copiedArray[j], copiedArray[i]];
+      }
+
+      return copiedArray;
+    }
+
+    function createRandomFoodsByRestaurant() {
+      // เอาโรตีออก ไม่ให้ถูกสุ่มเข้าร้าน
+      const availableFoods = baseFoods.filter((food) => {
+        return food.id !== "food066" && food.name !== "โรตี";
+      });
+
+      return restaurants.flatMap((restaurant) => {
+        const randomFoods = shuffleArray(availableFoods).slice(0, 5);
+
+        return randomFoods.map((food, index) => {
+          const menuSlot = index + 1;
+          const menuSlotText = String(menuSlot).padStart(2, "0");
+
+          return {
+            ...food,
+
+            // Document ID ใหม่ ไม่ซ้ำ และกดซ้ำจะทับ 5 เมนูเดิมของร้านนั้น
+            id: `${restaurant.id}_food${menuSlotText}`,
+
+            // ID อาหารต้นฉบับ ใช้เชื่อมกับ AI / nutrition_data_service.dart
+            originalFoodId: food.id,
+
+            // ลำดับเมนูในร้าน
+            menuSlot: menuSlot,
+
+            // เชื่อมกับ collection restaurants
+            restaurantId: restaurant.id,
+            restaurantName: restaurant.name
+          };
+        });
+      });
+    }
+
+
+    // กำหนด Type ให้ชัดก่อนบันทึกลง Firestore
+    // string  = ข้อความ
+    // int     = ตัวเลขจำนวนเต็ม
+    // boolean = true / false
+    // array   = รายการหลายค่า
+    const toStringValue = (value) => value === undefined || value === null ? "" : String(value);
+    const toIntValue = (value) => {
+      const numberValue = Number(value);
+      return Number.isFinite(numberValue) ? Math.round(numberValue) : 0;
+    };
+    const toArrayValue = (value) => Array.isArray(value) ? value.map(item => String(item)) : [];
+
+    function normalizeFood(food) {
+      const status = toStringValue(food.status);
+
+      return {
+        // String
+        id: toStringValue(food.id),
+        originalFoodId: toStringValue(food.originalFoodId),
+        restaurantId: toStringValue(food.restaurantId),
+        restaurantName: toStringValue(food.restaurantName),
+        name: toStringValue(food.name),
+        imageUrl: toStringValue(food.imageUrl),
+        ingredients: toStringValue(food.ingredients),
+        diabetesRisk: toStringValue(food.diabetesRisk),
+        hypertensionRisk: toStringValue(food.hypertensionRisk),
+        dyslipidemiaRisk: toStringValue(food.dyslipidemiaRisk),
+        kidneyRisk: toStringValue(food.kidneyRisk),
+        obesityRisk: toStringValue(food.obesityRisk),
+        riskNote: toStringValue(food.riskNote),
+        recommendation: toStringValue(food.recommendation),
+        nutritionSource: toStringValue(food.nutritionSource),
+        riskCriteria: toStringValue(food.riskCriteria),
+        medicalDisclaimer: toStringValue(food.medicalDisclaimer),
+        status: status,
+
+        // Int / Number
+        menuSlot: toIntValue(food.menuSlot),
+        portionG: toIntValue(food.portionG),
+        calories: toIntValue(food.calories),
+        carb: toIntValue(food.carb),
+        sugar: toIntValue(food.sugar),
+        protein: toIntValue(food.protein),
+        fat: toIntValue(food.fat),
+        saturatedFat: toIntValue(food.saturatedFat),
+        sodium: toIntValue(food.sodium),
+
+        // Map / Object ที่ข้างในเป็น String
+        risks: {
+          diabetes: toStringValue(food.risks?.diabetes),
+          hypertension: toStringValue(food.risks?.hypertension),
+          dyslipidemia: toStringValue(food.risks?.dyslipidemia),
+          kidney: toStringValue(food.risks?.kidney),
+          obesity: toStringValue(food.risks?.obesity)
+        },
+
+        // Array<String>
+        suitableForDiseases: toArrayValue(food.suitableForDiseases),
+        cautionForDiseases: toArrayValue(food.cautionForDiseases),
+
+        // Boolean
+        isRecommended: status === "เหมาะสม",
+        shouldCaution: status === "ควรระวัง",
+        isNotRecommended: status === "ไม่แนะนำ",
+        isActive: true,
+        isSeedData: true,
+
+        // Timestamp
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+    }
+
+    const result = document.getElementById("result");
+    const seedBtn = document.getElementById("seedBtn");
+
+    seedBtn.addEventListener("click", async () => {
+      result.textContent = "กำลังเพิ่มข้อมูล...";
+      seedBtn.disabled = true;
+
+      try {
+        const foods = createRandomFoodsByRestaurant();
+        let successCount = 0;
+
+        for (const food of foods) {
+          const typedFood = normalizeFood(food);
+          await setDoc(
+            doc(
+              db,
+              "restaurants",
+              typedFood.restaurantId,
+              "foods",
+              typedFood.id
+            ),
+            typedFood
+          );
+          successCount++;
+          result.textContent = `เพิ่มแล้ว ${successCount}/${foods.length} รายการ`;
+        }
+
+        result.textContent = `สุ่มและเพิ่มข้อมูลสำเร็จแล้ว ✅
+ทั้งหมด ${successCount} รายการ
+8 ร้าน ร้านละ 5 เมนู
+ไม่มีเมนูโรตี
+Subcollection: restaurants/{restaurantId}/foods`;
+      } catch (error) {
+        console.error(error);
+        result.textContent = "เกิดข้อผิดพลาด ❌\n" + error.message;
+      } finally {
+        seedBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
